@@ -1,5 +1,6 @@
 import React from 'react';
 import './App.css';
+import ChromeExtensionApi, { HelperScript } from './ChromeExtensionApi';
 
 interface IProps {
 }
@@ -10,23 +11,40 @@ interface IState {
 }
 
 class App extends React.Component<IProps, IState> {
+
+  chromeExtensionApi = new ChromeExtensionApi(true);
+
   constructor(props: any) {
     super(props);
     this.state = {
       settingsExpanded: false,
-      darkMode: (window as any)?.chrome?.devtools?.panels?.themeName === 'dark',
+      darkMode: this.chromeExtensionApi.getTheme() === 'dark',
     };
+  }
+
+  async onClickGetSelectors() {
+    const result = await this.chromeExtensionApi.runHelperScript(HelperScript.getAttributesFromElems, []);
+    console.log(result);
   }
 
   render() {
     return (
       <div className={this.plusDarkTheme('App')}>
-          <div>hello world</div>
+          <div>hello world4</div>
+          <button onClick={() => this.onClickGetSelectors()}>Run Eval</button>
           <div>
             {this.renderSettings()}
           </div>
       </div>
     );
+  }
+
+  renderSelectorField() {
+    // render rows
+    // render buttons within rows
+    // make sure filters are taken into account
+    // make sure onclicks are setup
+    // have a "not" state for each button
   }
 
   renderSettings() {
