@@ -174,9 +174,4 @@ export let injectString = "var lastSelectedElem = $0; var myInspect = inspect; "
 injectString = injectString + getAttributesFromElemsMini + " ";
 injectString = injectString + selectElemMini + " ";
 injectString = injectString + isElemVisibleMini + " ";
-
-export let testInjectString = "var lastSelectedElem = document.querySelector('div'); var myInspect = function(s){console.log('test inspect: ' + s)}; ";
-testInjectString += getAttributesFromElemsMini + " ";
-testInjectString += selectElemMini + " ";
-testInjectString += isElemVisibleMini + " ";  
   

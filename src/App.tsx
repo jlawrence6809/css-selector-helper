@@ -12,7 +12,7 @@ interface IState {
 
 class App extends React.Component<IProps, IState> {
 
-  chromeExtensionApi = new ChromeExtensionApi(true);
+  chromeExtensionApi = new ChromeExtensionApi();
 
   constructor(props: any) {
     super(props);

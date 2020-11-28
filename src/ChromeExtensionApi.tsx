@@ -1,5 +1,5 @@
 import './App.css';
-import {injectString, testInjectString} from './EvalFunctions';
+import {injectString} from './EvalFunctions';
 
 /**
  * Fill this in as new extension api features are used.
@@ -16,29 +16,6 @@ type RawChrome = {
   },
 };
 
-const mockChrome: RawChrome = {
-  runtime: {},
-  devtools: {
-    panels: {
-      themeName: 'default',
-    },
-    inspectedWindow: {
-      eval: (evalStr, callback) => {
-        try {
-          console.log(window['$0' as any]);
-          console.log(window['0' as any]);
-          console.log(Object.keys(window));
-          // eslint-disable-next-line no-eval
-          const result = eval(evalStr);
-          callback(result, false);
-        } catch(e) {
-          callback(e, true);
-        }
-      },
-    }
-  },
-};
-
 export enum HelperScript {
   getAttributesFromElems = 'getAttributesFromElems',
   selectElem = "selectElem",
@@ -46,7 +23,6 @@ export enum HelperScript {
 }
 
 export default class ChromeExtensionApi {
-  constructor(private test: boolean){}
 
   getTheme(): RawChrome["devtools"]["panels"]["themeName"]{
     return this.getRawChromeApi().devtools.panels.themeName;
@@ -59,7 +35,7 @@ export default class ChromeExtensionApi {
     //unroll args into script
     let evalStr = "";
     if (!alreadyInjected) {
-      evalStr += this.test ? testInjectString : injectString; // injectString is in evalHelpers.js
+      evalStr += injectString; // injectString is in evalHelpers.js
     }
 
     // build args string. Args themselves must be strings.
@@ -88,9 +64,6 @@ export default class ChromeExtensionApi {
   }
 
   private getRawChromeApi(): RawChrome {
-    if (this.test) {
-      return mockChrome;
-    }
     const chrome = (window as any)?.chrome as RawChrome | null;
     if (!chrome) {
       throw new Error('Could not access chrome!');
