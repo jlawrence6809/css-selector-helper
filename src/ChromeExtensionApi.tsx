@@ -16,11 +16,30 @@ type RawChrome = {
   },
 };
 
-export enum HelperScript {
+enum HelperScript {
   getAttributesFromElems = 'getAttributesFromElems',
   selectElem = "selectElem",
   isElemVisible = "isElemVisible",
 }
+
+/**
+ * Note that frames isn't really used. I don't think its possible to extend the extension to inner iframes. Needs more
+ * research
+ */
+type RawAttributesAndFramesHierarchy = {
+  frames: [],
+  attributes: AttributesHierarchy,
+};
+
+/**
+ * Array of arrays consisting of name value pairs for the parts of page elements. Ie: {name: 'tagName', value: 'div'}
+ * The first array of attributes is the one currently selected on the page, then the rest of the array is that elements
+ * parents as you ascend the html tree ending at the <body>.
+ */
+export type AttributesHierarchy = [[{
+  name: string,
+  value: string,
+}]];
 
 export default class ChromeExtensionApi {
 
@@ -28,12 +47,17 @@ export default class ChromeExtensionApi {
     return this.getRawChromeApi().devtools.panels.themeName;
   }
 
-  async runHelperScript(script: HelperScript, args?: string[]): Promise<any> {
+  async getAttributesHierarchyForCurrentlySelectedElementOnPage(): Promise<AttributesHierarchy> {
+    const rawAttributesAndFramesHierarchy: RawAttributesAndFramesHierarchy = await this.runHelperScript(HelperScript.getAttributesFromElems);
+    return rawAttributesAndFramesHierarchy.attributes;
+  }
+
+  private async runHelperScript(script: HelperScript, args?: string[]): Promise<any> {
     const alreadyInjectedEval = "(function(){return (typeof " + script + " !== 'undefined');}());";
     const alreadyInjected = await this.runInInspectedWindow(alreadyInjectedEval); // error handling?
 
     //unroll args into script
-    let evalStr = "";
+    let evalStr = "var lastSelectedElem = $0; var myInspect = inspect; ";
     if (!alreadyInjected) {
       evalStr += injectString; // injectString is in evalHelpers.js
     }

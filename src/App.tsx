@@ -1,6 +1,6 @@
 import React from 'react';
 import './App.css';
-import ChromeExtensionApi, { HelperScript } from './ChromeExtensionApi';
+import ChromeExtensionApi, { AttributesHierarchy } from './ChromeExtensionApi';
 
 interface IProps {
 }
@@ -23,7 +23,7 @@ class App extends React.Component<IProps, IState> {
   }
 
   async onClickGetSelectors() {
-    const result = await this.chromeExtensionApi.runHelperScript(HelperScript.getAttributesFromElems, []);
+    const result: AttributesHierarchy = await this.chromeExtensionApi.getAttributesHierarchyForCurrentlySelectedElementOnPage();
     console.log(result);
   }
 
@@ -74,7 +74,6 @@ class App extends React.Component<IProps, IState> {
   }
 
   // HELPERS
-  
   toggleState(stateName: string): void {
     // lots of hacky anys going on here...
     if (typeof (this.state as any)[stateName] === 'undefined') {
@@ -92,8 +91,6 @@ class App extends React.Component<IProps, IState> {
 
 - color code the parts, eg: div/span/etc are light grey, class is light blue, etc
 - add blacklist to filter out things, can either remove parts like element type, classes, ids, specific selectors like href or target or data-reactid, etc. OR disable a specific part type/value combo (eg: [data-reactid='17'])
-- 
-
 */
 
 export default App;
