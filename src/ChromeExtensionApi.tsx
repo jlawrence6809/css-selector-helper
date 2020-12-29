@@ -84,6 +84,10 @@ export default class ChromeExtensionApi {
     };
   }
 
+  async copyTextToClipboard(text: String): Promise<void> {
+    return this.runInInspectedWindow(`copy("${text}")`);
+  }
+
   private async runHelperScript(script: HelperScript, args?: string[]): Promise<any> {
     const alreadyInjectedEval = "(function(){return (typeof " + script + " !== 'undefined');}());";
     const alreadyInjected = await this.runInInspectedWindow(alreadyInjectedEval); // error handling?
