@@ -1,6 +1,9 @@
 import React from 'react';
 import './App.css';
 import ChromeExtensionApi, { AttributesHierarchy } from './ChromeExtensionApi';
+import 'bootstrap/dist/css/bootstrap.min.css';
+
+const CHROME_DARK_THEME = 'dark';
 
 interface IProps {
 }
@@ -8,6 +11,9 @@ interface IProps {
 interface IState {
   settingsExpanded: boolean;
   darkMode: boolean;
+  totalMatchesCount: number;
+  currentMatch: number;
+  attributesHierarchies: AttributesHierarchy[];
 }
 
 class App extends React.Component<IProps, IState> {
@@ -18,33 +24,101 @@ class App extends React.Component<IProps, IState> {
     super(props);
     this.state = {
       settingsExpanded: false,
-      darkMode: this.chromeExtensionApi.getTheme() === 'dark',
+      darkMode: this.chromeExtensionApi.getTheme() === CHROME_DARK_THEME,
+      totalMatchesCount: 1,
+      currentMatch: -1,
+      attributesHierarchies: [],
     };
   }
 
+  async onClickPrev() {
+    console.log('Prev clicked!');
+  }
+
+  async onClickNext() {
+    console.log('Next clicked!');
+  }
+
   async onClickGetSelectors() {
-    const result: AttributesHierarchy = await this.chromeExtensionApi.getAttributesHierarchyForCurrentlySelectedElementOnPage();
+    const result: AttributesHierarchy[] = await this.chromeExtensionApi.getAttributesHierarchyForCurrentlySelectedElementOnPage();
+    this.setState({
+      attributesHierarchies: result,
+    });
     console.log(result);
+  }
+
+  async onClickCopySelectorToClipboard() {
+    console.log('Copy to clipboard clicked!');
+  }
+
+  async onOnlyVisibleToggle(event: any) {
+    console.log('On only visible toggle!');
+    console.log(event);
   }
 
   render() {
     return (
       <div className={this.plusDarkTheme('App')}>
-          <div>hello world4</div>
-          <button onClick={() => this.onClickGetSelectors()}>Run Eval</button>
-          <div>
+          <div>{this.renderAttributesHierarchySection()}</div>
+          <div className="mb-1">
+            {this.renderMatchesFields()}
+          </div>
+          <div className="mb-1">
+            {this.renderVisibilityButton()}
+          </div>
+          <button className="mr-1" onClick={() => this.onClickGetSelectors()}>Get Selectors</button>
+          <button onClick={() => this.onClickCopySelectorToClipboard()}>Copy to Clipboard</button>
+          <div className="mt-1">
             {this.renderSettings()}
           </div>
       </div>
     );
   }
 
-  renderSelectorField() {
+  renderAttributesHierarchySection() {
     // render rows
     // render buttons within rows
     // make sure filters are taken into account
     // make sure onclicks are setup
     // have a "not" state for each button
+    return (
+      <div>
+        {this.state.attributesHierarchies.map(this.renderAttributesHierarchyRow)}
+      </div>
+    );
+  }
+
+  renderAttributesHierarchyRow(attributesHierarchy: AttributesHierarchy) {
+    return (
+      <div className="d-flex">
+        {
+          attributesHierarchy.map(({name, value}) => (<button>{value}</button>))
+        }
+      </div>
+    );
+  }
+
+  renderMatchesFields() {
+    return (
+      <div className="d-flex">
+        <button className="mr-1" onClick={() => this.onClickPrev()}>Prev</button>
+        <div className="selectedCounter d-flex mr-1">
+          <input className="selectedCounterInput" value={this.state.currentMatch}></input>
+          /
+          <div className="totalMatchesCount">{this.state.totalMatchesCount}</div>
+        </div>
+        <button onClick={() => this.onClickNext()}>Next</button>
+      </div>
+    );
+  }
+
+  renderVisibilityButton() {
+    return (
+      <div className="d-flex">
+        <input type="checkbox" onChange={(event) => this.onOnlyVisibleToggle(event)}></input>
+        <div>Only Visible</div>
+      </div>
+    );
   }
 
   renderSettings() {

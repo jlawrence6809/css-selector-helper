@@ -1,5 +1,5 @@
 chrome.devtools.panels.elements.createSidebarPane(
-    "CSS Selector",
+    "CSS Selector2",
     function(sidebar) {
 	  	sidebar.setPage("index.html");
 	  	//resize
@@ -9,11 +9,10 @@ chrome.devtools.panels.elements.createSidebarPane(
 		    	sidebar.setHeight(newh);
 			}
 			var resizeListener = function(event){
-				if(event.data == "resize panel"){
+				if(event.data === "resize panel"){
 					resizeFunc();
 				}
 			}
-
 			resizeFunc();
   			panelWindow.onresize = resizeFunc;
   			panelWindow.addEventListener("message", resizeListener, false);

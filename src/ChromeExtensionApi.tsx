@@ -28,7 +28,7 @@ enum HelperScript {
  */
 type RawAttributesAndFramesHierarchy = {
   frames: [],
-  attributes: AttributesHierarchy,
+  attributes: AttributesHierarchy[],
 };
 
 /**
@@ -36,10 +36,10 @@ type RawAttributesAndFramesHierarchy = {
  * The first array of attributes is the one currently selected on the page, then the rest of the array is that elements
  * parents as you ascend the html tree ending at the <body>.
  */
-export type AttributesHierarchy = [[{
+export type AttributesHierarchy = [{
   name: string,
   value: string,
-}]];
+}];
 
 export default class ChromeExtensionApi {
 
@@ -47,7 +47,7 @@ export default class ChromeExtensionApi {
     return this.getRawChromeApi().devtools.panels.themeName;
   }
 
-  async getAttributesHierarchyForCurrentlySelectedElementOnPage(): Promise<AttributesHierarchy> {
+  async getAttributesHierarchyForCurrentlySelectedElementOnPage(): Promise<AttributesHierarchy[]> {
     const rawAttributesAndFramesHierarchy: RawAttributesAndFramesHierarchy = await this.runHelperScript(HelperScript.getAttributesFromElems);
     return rawAttributesAndFramesHierarchy.attributes;
   }

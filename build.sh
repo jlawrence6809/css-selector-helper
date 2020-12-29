@@ -12,7 +12,6 @@ build() {
 
     mkdir -p dist
     cp -r build/* dist
-
 }
 
 build
