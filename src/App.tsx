@@ -1,6 +1,6 @@
 import React from 'react';
 import './App.css';
-import ChromeExtensionApi, { AttributesHierarchy } from './ChromeExtensionApi';
+import ChromeExtensionApi, { Attribute, AttributesHierarchy, AttributeType } from './ChromeExtensionApi';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 const CHROME_DARK_THEME = 'dark';
@@ -14,6 +14,7 @@ interface IState {
   totalMatchesCount: number;
   currentMatch: number;
   attributesHierarchies: AttributesHierarchy[];
+  currentSelectors: string[][];
 }
 
 class App extends React.Component<IProps, IState> {
@@ -28,6 +29,7 @@ class App extends React.Component<IProps, IState> {
       totalMatchesCount: 1,
       currentMatch: -1,
       attributesHierarchies: [],
+      currentSelectors: [],
     };
   }
 
@@ -41,10 +43,11 @@ class App extends React.Component<IProps, IState> {
 
   async onClickGetSelectors() {
     const result: AttributesHierarchy[] = await this.chromeExtensionApi.getAttributesHierarchyForCurrentlySelectedElementOnPage();
+    result.forEach(arr => arr.sort(this.compareAttributesForSort));
     this.setState({
       attributesHierarchies: result,
+      currentSelectors: [],
     });
-    console.log(result);
   }
 
   async onClickCopySelectorToClipboard() {
@@ -59,7 +62,7 @@ class App extends React.Component<IProps, IState> {
   render() {
     return (
       <div className={this.plusDarkTheme('App')}>
-          <div>{this.renderAttributesHierarchySection()}</div>
+          <div className="mb-2">{this.renderAttributesHierarchySection()}</div>
           <div className="mb-1">
             {this.renderMatchesFields()}
           </div>
@@ -71,31 +74,99 @@ class App extends React.Component<IProps, IState> {
           <div className="mt-1">
             {this.renderSettings()}
           </div>
+          {this.getCurrentSelectorString()}
       </div>
     );
   }
 
   renderAttributesHierarchySection() {
-    // render rows
-    // render buttons within rows
-    // make sure filters are taken into account
-    // make sure onclicks are setup
-    // have a "not" state for each button
     return (
       <div>
-        {this.state.attributesHierarchies.map(this.renderAttributesHierarchyRow)}
+        {this.state.attributesHierarchies.map((ah: AttributesHierarchy, i) => {
+          return (
+            <div className="attributeRow d-flex mb-1">
+              {ah.map((attr, j) => this.renderAttributeButton(attr, i, j))}
+            </div>
+          );
+        })}
       </div>
     );
   }
 
-  renderAttributesHierarchyRow(attributesHierarchy: AttributesHierarchy) {
+  renderAttributeButton(attribute: Attribute, rowIdx: number, buttonIdx: number) {
+    const selector = this.buildSelector(attribute);
     return (
-      <div className="d-flex">
-        {
-          attributesHierarchy.map(({name, value}) => (<button>{value}</button>))
-        }
+      <div className="mr-1">
+        <button onClick={() => this.onAttributeButtonClick(selector, rowIdx, buttonIdx)}>{selector}</button>
       </div>
     );
+  }
+
+
+  async onAttributeButtonClick(selector: string, rowIdx: number, buttonIdx: number) {
+    const selectors = [...this.state.currentSelectors];
+    if (!selectors[rowIdx]) {
+      selectors[rowIdx] = [];
+    }
+    if (!!selectors[rowIdx][buttonIdx]) {
+      delete selectors[rowIdx][buttonIdx];
+    } else {
+      selectors[rowIdx][buttonIdx] = selector;
+    }
+    const querySelector = this.getCurrentSelectorString();
+    let totalMatchesCount: number = 0;
+    if (!!querySelector) {
+      totalMatchesCount = await this.chromeExtensionApi.getNumberOfMatches(querySelector, false);
+    }
+    this.setState({
+      currentSelectors: selectors,
+      totalMatchesCount: totalMatchesCount,
+    });
+  }
+
+  getCurrentSelectorString() {
+    const selectors = this.state.currentSelectors;
+    return selectors.filter(arr => !!arr)
+      .map(rowSelectors => rowSelectors.join(''))
+      .filter(sel => !!sel)
+      .join(' ');
+  }
+
+  compareAttributesForSort(a: Attribute, b: Attribute): number {
+    if (a.name === b.name) {
+      // should only apply to classes and "other"
+      return a.value > b.value ? 1 : -1;
+    }
+    const getOrder = (type: AttributeType | string) => {
+      switch(type) {
+        case AttributeType.TagName:
+          return 3;
+        case AttributeType.Id:
+          return 2;
+        case AttributeType.Class:
+          return 1;
+      }
+      return 0;
+    };
+    const orderA = getOrder(a.name);
+    const orderB = getOrder(b.name);
+    if (orderA === 0 && orderB === 0) {
+      // when they are both type "other" we should sort by the name instead
+      return a.name > b.name ? 1 : -1;
+    }
+    return orderB - orderA;
+  }
+
+  buildSelector(attribute: Attribute): string {
+    switch(attribute.name){
+      case AttributeType.TagName:
+        return attribute.value;
+      case AttributeType.Id:
+        return '#' + attribute.value;
+      case AttributeType.Class:
+        return '.' + attribute.value;
+    }
+    return "[" + attribute.name + "='" + attribute.value + "']";
   }
 
   renderMatchesFields() {

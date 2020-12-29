@@ -36,10 +36,23 @@ type RawAttributesAndFramesHierarchy = {
  * The first array of attributes is the one currently selected on the page, then the rest of the array is that elements
  * parents as you ascend the html tree ending at the <body>.
  */
-export type AttributesHierarchy = [{
+export type AttributesHierarchy = [Attribute];
+
+export type Attribute = {
   name: string,
   value: string,
-}];
+};
+
+export enum AttributeType {
+ TagName = 'tagName',
+ Id = 'id',
+ Class = 'class',
+};
+
+export type SelectElementResult = {
+  currentMatch: number,
+  matchCount: number,
+};
 
 export default class ChromeExtensionApi {
 
@@ -49,7 +62,26 @@ export default class ChromeExtensionApi {
 
   async getAttributesHierarchyForCurrentlySelectedElementOnPage(): Promise<AttributesHierarchy[]> {
     const rawAttributesAndFramesHierarchy: RawAttributesAndFramesHierarchy = await this.runHelperScript(HelperScript.getAttributesFromElems);
-    return rawAttributesAndFramesHierarchy.attributes;
+    return rawAttributesAndFramesHierarchy.attributes.reverse();
+  }
+
+  async getNumberOfMatches(querySelector: string, visibleOnly: boolean): Promise<number> {
+    let result = await this.runSelectElemScript(querySelector, -1, visibleOnly, false);
+    return result.matchCount;
+  }
+
+  private async runSelectElemScript(querySelector: string, desiredMatch: number, visibleOnly: boolean, inspectCurrentMatch: boolean): Promise<SelectElementResult> {
+    const args = [
+      querySelector,
+      desiredMatch + '',
+      visibleOnly + '',
+      inspectCurrentMatch + '',
+    ];
+    const {curMatch, numMatch} = await this.runHelperScript(HelperScript.selectElem, args);
+    return {
+      currentMatch: curMatch,
+      matchCount: numMatch,
+    };
   }
 
   private async runHelperScript(script: HelperScript, args?: string[]): Promise<any> {
