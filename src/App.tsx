@@ -1,9 +1,14 @@
 import React from 'react';
 import './App.css';
-import ChromeExtensionApi, { Attribute, AttributesHierarchy, AttributeType } from './ChromeExtensionApi';
+import ChromeExtensionApi, { Attribute, AttributesHierarchy, AttributeType, SelectElementResult } from './ChromeExtensionApi';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 const CHROME_DARK_THEME = 'dark';
+
+const INITIAL_MATCH_STATE: SelectElementResult = {
+  currentMatch: -1,
+  matchCount: -1
+};
 
 interface IProps {
 }
@@ -11,11 +16,13 @@ interface IProps {
 interface IState {
   settingsExpanded: boolean;
   darkMode: boolean;
-  totalMatchesCount: number;
-  currentMatch: number;
+  matchState: SelectElementResult;
   attributesHierarchies: AttributesHierarchy[];
-  currentSelectors: string[][];
+  querySelectorState: QuerySelectorState;
+  visibleOnly: boolean;
 }
+
+type QuerySelectorState = string[][];
 
 class App extends React.Component<IProps, IState> {
 
@@ -26,19 +33,48 @@ class App extends React.Component<IProps, IState> {
     this.state = {
       settingsExpanded: false,
       darkMode: this.chromeExtensionApi.getTheme() === CHROME_DARK_THEME,
-      totalMatchesCount: 1,
-      currentMatch: -1,
+      matchState: INITIAL_MATCH_STATE,
       attributesHierarchies: [],
-      currentSelectors: [],
+      querySelectorState: [],
+      visibleOnly: false,
     };
   }
 
   async onClickPrev() {
-    console.log('Prev clicked!');
+    const currentMatch = this.state.matchState.currentMatch;
+    const result = await this.chromeExtensionApi.runSelectElemScript(
+      this.getCurrentSelectorString(),
+      currentMatch - 1,
+      this.state.visibleOnly,
+      true
+    );
+    this.setState({
+      matchState: result,
+    });
   }
 
   async onClickNext() {
-    console.log('Next clicked!');
+    const currentMatch = this.state.matchState.currentMatch;
+    const matchState = await this.chromeExtensionApi.runSelectElemScript(
+      this.getCurrentSelectorString(),
+      currentMatch < 1 ? 1 : currentMatch + 1,
+      this.state.visibleOnly,
+      true
+    );
+    this.setState({ matchState });
+  }
+
+  async onSelectedCounterChange(event: React.FormEvent<HTMLInputElement>) {
+    console.log('onSelectedCounterChange');
+    console.log(event.currentTarget.value);
+    console.log(event);
+    const matchState = await this.chromeExtensionApi.runSelectElemScript(
+      this.getCurrentSelectorString(),
+      parseInt(event.currentTarget.value),
+      this.state.visibleOnly,
+      true
+    );
+    this.setState({ matchState });
   }
 
   async onClickGetSelectors() {
@@ -46,7 +82,8 @@ class App extends React.Component<IProps, IState> {
     result.forEach(arr => arr.sort(this.compareAttributesForSort));
     this.setState({
       attributesHierarchies: result,
-      currentSelectors: [],
+      querySelectorState: [],
+      matchState: INITIAL_MATCH_STATE,
     });
   }
 
@@ -57,6 +94,30 @@ class App extends React.Component<IProps, IState> {
   async onOnlyVisibleToggle(event: any) {
     console.log('On only visible toggle!');
     console.log(event);
+  }
+
+  async onAttributeButtonClick(selector: string, rowIdx: number, buttonIdx: number) {
+    const selectors = [...this.state.querySelectorState];
+    if (!selectors[rowIdx]) {
+      selectors[rowIdx] = [];
+    }
+    if (!!selectors[rowIdx][buttonIdx]) {
+      delete selectors[rowIdx][buttonIdx];
+    } else {
+      selectors[rowIdx][buttonIdx] = selector;
+    }
+    const querySelector = this.getCurrentSelectorString(selectors);
+    let matchCount: number = 0;
+    if (!!querySelector) {
+      matchCount = await this.chromeExtensionApi.getNumberOfMatches(querySelector, false);
+    }
+    this.setState({
+      querySelectorState: selectors,
+      matchState: {
+        currentMatch: INITIAL_MATCH_STATE.currentMatch,
+        matchCount,
+      },
+    });
   }
 
   render() {
@@ -102,30 +163,70 @@ class App extends React.Component<IProps, IState> {
     );
   }
 
-
-  async onAttributeButtonClick(selector: string, rowIdx: number, buttonIdx: number) {
-    const selectors = [...this.state.currentSelectors];
-    if (!selectors[rowIdx]) {
-      selectors[rowIdx] = [];
-    }
-    if (!!selectors[rowIdx][buttonIdx]) {
-      delete selectors[rowIdx][buttonIdx];
-    } else {
-      selectors[rowIdx][buttonIdx] = selector;
-    }
-    const querySelector = this.getCurrentSelectorString();
-    let totalMatchesCount: number = 0;
-    if (!!querySelector) {
-      totalMatchesCount = await this.chromeExtensionApi.getNumberOfMatches(querySelector, false);
-    }
-    this.setState({
-      currentSelectors: selectors,
-      totalMatchesCount: totalMatchesCount,
-    });
+  renderMatchesFields() {
+    const currentMatch = this.state.matchState.currentMatch < 1 ? '' : this.state.matchState.currentMatch;
+    console.log('renderMatchesFields');
+    console.log(currentMatch);
+    const currentMatchWidth = `calc(${(currentMatch + '').length || 1}ch + 270px)`; // length in "character" units
+    const matchCount = this.state.matchState.matchCount < 1 ? '-' : this.state.matchState.matchCount;
+    return (
+      <div className="d-flex">
+        <button className="mr-1" onClick={() => this.onClickPrev()}>Prev</button>
+        <div className="selectedCounter d-flex mr-1">
+          <input
+            className="selectedCounterInput"
+            style={{width: currentMatchWidth}}
+            value={currentMatch}
+            onChange={ev => this.onSelectedCounterChange(ev)}
+            placeholder="-"
+            type="number"
+          ></input>
+          /
+          <div className="totalMatchesCount">{matchCount}</div>
+        </div>
+        <button onClick={() => this.onClickNext()}>Next</button>
+      </div>
+    );
   }
 
-  getCurrentSelectorString() {
-    const selectors = this.state.currentSelectors;
+  renderVisibilityButton() {
+    return (
+      <div className="d-flex">
+        <input type="checkbox" onChange={(event) => this.onOnlyVisibleToggle(event)}></input>
+        <div>Only Visible</div>
+      </div>
+    );
+  }
+
+  renderSettings() {
+    const settings = (
+      <div className="darkmode-setting">
+        todo settings
+      </div>
+    );
+    return (
+      <div className="settings">
+        <button onClick={() => this.toggleState('settingsExpanded')}>{this.renderSettingsIcon()}</button>
+        {this.state.settingsExpanded ? settings : null}
+      </div>
+    );
+  }
+
+  renderSettingsIcon() {
+    const settingsIcon = (<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"><path fill="none" d="M0 0h24v24H0z"/><path d="M8.686 4l2.607-2.607a1 1 0 0 1 1.414 0L15.314 4H19a1 1 0 0 1 1 1v3.686l2.607 2.607a1 1 0 0 1 0 1.414L20 15.314V19a1 1 0 0 1-1 1h-3.686l-2.607 2.607a1 1 0 0 1-1.414 0L8.686 20H5a1 1 0 0 1-1-1v-3.686l-2.607-2.607a1 1 0 0 1 0-1.414L4 8.686V5a1 1 0 0 1 1-1h3.686zM6 6v3.515L3.515 12 6 14.485V18h3.515L12 20.485 14.485 18H18v-3.515L20.485 12 18 9.515V6h-3.515L12 3.515 9.515 6H6zm6 10a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm0-2a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"/></svg>);
+    const downArrow = (<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"><path fill="none" d="M0 0h24v24H0z"/><path d="M12 13.172l4.95-4.95 1.414 1.414L12 16 5.636 9.636 7.05 8.222z"/></svg>);
+    const upArrow = (<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"><path fill="none" d="M0 0h24v24H0z"/><path d="M12 10.828l-4.95 4.95-1.414-1.414L12 8l6.364 6.364-1.414 1.414z"/></svg>);
+    return (
+      <span>
+          {settingsIcon}
+          {this.state.settingsExpanded ? downArrow : upArrow}
+      </span>
+    );
+  }
+
+  // ~~~~~~~~~~~~~~~~~~~~~ HELPERS ~~~~~~~~~~~~~~~~~~~~~
+
+  getCurrentSelectorString(selectors: QuerySelectorState = this.state.querySelectorState) {
     return selectors.filter(arr => !!arr)
       .map(rowSelectors => rowSelectors.join(''))
       .filter(sel => !!sel)
@@ -169,56 +270,6 @@ class App extends React.Component<IProps, IState> {
     return "[" + attribute.name + "='" + attribute.value + "']";
   }
 
-  renderMatchesFields() {
-    return (
-      <div className="d-flex">
-        <button className="mr-1" onClick={() => this.onClickPrev()}>Prev</button>
-        <div className="selectedCounter d-flex mr-1">
-          <input className="selectedCounterInput" value={this.state.currentMatch}></input>
-          /
-          <div className="totalMatchesCount">{this.state.totalMatchesCount}</div>
-        </div>
-        <button onClick={() => this.onClickNext()}>Next</button>
-      </div>
-    );
-  }
-
-  renderVisibilityButton() {
-    return (
-      <div className="d-flex">
-        <input type="checkbox" onChange={(event) => this.onOnlyVisibleToggle(event)}></input>
-        <div>Only Visible</div>
-      </div>
-    );
-  }
-
-  renderSettings() {
-    const settings = (
-      <div className="darkmode-setting">
-        todo settings
-      </div>
-    );
-    return (
-      <div className="settings">
-        <button onClick={() => this.toggleState('settingsExpanded')}>{this.renderSettingsIcon()}</button>
-        {this.state.settingsExpanded ? settings : null}
-      </div>
-    );
-  }
-
-  renderSettingsIcon() {
-    const settingsIcon = (<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"><path fill="none" d="M0 0h24v24H0z"/><path d="M8.686 4l2.607-2.607a1 1 0 0 1 1.414 0L15.314 4H19a1 1 0 0 1 1 1v3.686l2.607 2.607a1 1 0 0 1 0 1.414L20 15.314V19a1 1 0 0 1-1 1h-3.686l-2.607 2.607a1 1 0 0 1-1.414 0L8.686 20H5a1 1 0 0 1-1-1v-3.686l-2.607-2.607a1 1 0 0 1 0-1.414L4 8.686V5a1 1 0 0 1 1-1h3.686zM6 6v3.515L3.515 12 6 14.485V18h3.515L12 20.485 14.485 18H18v-3.515L20.485 12 18 9.515V6h-3.515L12 3.515 9.515 6H6zm6 10a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm0-2a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"/></svg>);
-    const downArrow = (<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"><path fill="none" d="M0 0h24v24H0z"/><path d="M12 13.172l4.95-4.95 1.414 1.414L12 16 5.636 9.636 7.05 8.222z"/></svg>);
-    const upArrow = (<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"><path fill="none" d="M0 0h24v24H0z"/><path d="M12 10.828l-4.95 4.95-1.414-1.414L12 8l6.364 6.364-1.414 1.414z"/></svg>);
-    return (
-      <span>
-          {settingsIcon}
-          {this.state.settingsExpanded ? downArrow : upArrow}
-      </span>
-    );
-  }
-
-  // HELPERS
   toggleState(stateName: string): void {
     // lots of hacky anys going on here...
     if (typeof (this.state as any)[stateName] === 'undefined') {

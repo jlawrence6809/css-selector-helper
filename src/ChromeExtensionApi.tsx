@@ -70,7 +70,7 @@ export default class ChromeExtensionApi {
     return result.matchCount;
   }
 
-  private async runSelectElemScript(querySelector: string, desiredMatch: number, visibleOnly: boolean, inspectCurrentMatch: boolean): Promise<SelectElementResult> {
+  async runSelectElemScript(querySelector: string, desiredMatch: number, visibleOnly: boolean, inspectCurrentMatch: boolean): Promise<SelectElementResult> {
     const args = [
       querySelector,
       desiredMatch + '',
