@@ -14,6 +14,9 @@ type RawChrome = {
       eval: (evalString: string, callback: ((result: any, isException: boolean) => void)) => void,
     }
   },
+  storage: {
+    sync: any,
+  },
 };
 
 enum HelperScript {
@@ -86,6 +89,12 @@ export default class ChromeExtensionApi {
 
   async copyTextToClipboard(text: String): Promise<void> {
     return this.runInInspectedWindow(`copy("${text}")`);
+  }
+
+  getStorage() {
+    const chrome = this.getRawChromeApi();
+
+    return chrome;
   }
 
   private async runHelperScript(script: HelperScript, args?: string[]): Promise<any> {

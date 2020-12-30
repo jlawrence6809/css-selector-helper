@@ -1,49 +1,93 @@
-import React from 'react';
+import React, {useContext, useReducer} from 'react';
 import './App.css';
-import ChromeExtensionApi, { Attribute, AttributesHierarchy, AttributeType, SelectElementResult } from './ChromeExtensionApi';
+import ChromeExtensionApi, { Attribute, AttributesHierarchy, AttributeType } from './ChromeExtensionApi';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import { downArrowIcon, eyeIcon, eyeOffIcon, settingsIcon, upArrowIcon } from './Icons';
+import { clipboardIcon, eyeIcon, eyeOffIcon, leftArrowsIcon, refreshIcon, rightArrowsIcon } from './Icons';
+import { EN } from './Localization';
+import Settings from './Settings';
+import { resetLocalStorage } from './LocalStorage';
+import { StoreContext } from './Store';
 
 const CHROME_DARK_THEME = 'dark';
 
-const INITIAL_MATCH_STATE: SelectElementResult = {
-  currentMatch: -1,
-  matchCount: -1
+
+const INITIAL_STATE: IAppState = {
+  darkMode: false,
 };
 
 interface IProps {
 }
 
-interface IState {
-  settingsExpanded: boolean;
+interface IAppState {
   darkMode: boolean;
-  matchState: SelectElementResult;
-  attributesHierarchies: AttributesHierarchy[];
-  querySelectorState: QuerySelectorState;
-  visibleOnly: boolean;
 }
 
-type QuerySelectorState = string[][];
+const plusDarkTheme = () => {
+  const {state} = useContext(StoreContext);
+  // return classString + (this.state.darkMode ? ' dark-theme' : '');
+  return (<div></div>);
+}
 
-class App extends React.Component<IProps, IState> {
+const App = () => {
+  const {state, dispatch} = useContext(StoreContext);
 
-  chromeExtensionApi = new ChromeExtensionApi();
+
+  return (
+    <div className={plusDarkTheme('App pl-1 pb-1')}>
+        <div className="mb-1">{this.renderAttributesHierarchySection()}</div>
+        <hr className={plusDarkTheme('attributesSectionSeparator')}/>
+        <div className="mb-2">
+          {this.renderMatchCylcerFields()}
+        </div>
+        <div className="mb-4">
+          <button className="iconButton mr-1" onClick={() => this.onClickGetSelectors()} title={EN.REFRESH_BUTTON_TITLE}>{refreshIcon}</button>
+          <button
+            className="iconButton mr-1"
+            onClick={() => this.onToggleVisibilityClick()}
+            title={this.state.visibleOnly ? EN.VISIBLE_ONLY_OFF_BUTTON_TITLE : EN.VISIBLE_ONLY_BUTTON_TITLE }
+          >
+            {this.state.visibleOnly ? eyeIcon : eyeOffIcon}
+          </button>
+          <button className="iconButton" onClick={() => this.onClickCopySelectorToClipboard()} title={EN.COPY_SELECTOR_BUTTON_TITLE}>{clipboardIcon}</button>
+        </div>
+        <div>
+          <button className="iconButton" onClick={() => this.toggleDarkmodeClick()}>Darkmode</button>
+          <Settings
+            darkMode={this.state.darkMode}
+            chromeExtensionApi={this.chromeExtensionApi}
+          ></Settings>
+        </div>
+    </div>
+  );
+};
+
+class AppClass extends React.Component<IProps, IAppState> {
 
   constructor(props: any) {
     super(props);
+
     this.state = {
-      settingsExpanded: false,
+      ...INITIAL_STATE,
       darkMode: this.chromeExtensionApi.getTheme() === CHROME_DARK_THEME,
-      matchState: INITIAL_MATCH_STATE,
-      attributesHierarchies: [],
-      querySelectorState: [],
-      visibleOnly: false,
     };
+
+    chromeExtensionApi = new ChromeExtensionApi();
+
+    // the html background is different from the app body. set it's background if dark mode.
+    if (this.state.darkMode) {
+      document.documentElement.style.backgroundColor = "#282c34";
+    }
+
+    resetLocalStorage(this.state.localStorage);
+  }
+
+  componentDidMount() {
+    this.onClickGetSelectors();
   }
 
   async onClickPrev() {
     const currentMatch = this.state.matchState.currentMatch;
-    const result = await this.chromeExtensionApi.runSelectElemScript(
+    const result = await this.context.chromeExtensionApi.runSelectElemScript(
       this.getQuerySelectorString(),
       currentMatch - 1,
       this.state.visibleOnly,
@@ -79,7 +123,18 @@ class App extends React.Component<IProps, IState> {
     await this.chromeExtensionApi.copyTextToClipboard(this.getQuerySelectorString());
   }
 
-  onAttributeButtonClick(selector: string, rowIdx: number, buttonIdx: number) {
+  onAttributeButtonClick(
+    event: React.MouseEvent<HTMLButtonElement, MouseEvent>,
+    selector: string,
+    rowIdx: number,
+    buttonIdx: number
+  ) {
+    // pressing a meta key while clicking 
+    const metaPressed = event.metaKey || event.altKey || event.ctrlKey || event.shiftKey;
+    if (metaPressed) {
+      selector = `:not(${selector})`;
+    }
+
     const selectors = [...this.state.querySelectorState];
     if (!selectors[rowIdx]) {
       selectors[rowIdx] = [];
@@ -100,30 +155,47 @@ class App extends React.Component<IProps, IState> {
     }, this.refreshMatchesState);
   }
 
-  async onToggleSettingsExpandClick() {
+  toggleDarkmodeClick() {
     this.setState({
-      settingsExpanded: !this.state.settingsExpanded
+      darkMode: !this.state.darkMode,
     });
+    if (!this.state.darkMode) {
+      document.documentElement.style.backgroundColor = "#282c34";
+    }
+  }
+
+  reducer(state: IAppState, action: any) {
+    return state;
   }
 
   render() {
+    const [state, dispatch] = useReducer(this.reducer, INITIAL_STATE);
+
     return (
-      <div className={this.plusDarkTheme('App')}>
-          <div className="mb-2">{this.renderAttributesHierarchySection()}</div>
-          <div className="d-flex mb-1">
-            <div className="mr-2">
-              {this.renderMatchesFields()}
-            </div>
-            <div>
-              {this.renderVisibilityButton()}
-            </div>
+      <div className={this.plusDarkTheme('App pl-1 pb-1')}>
+          <div className="mb-1">{this.renderAttributesHierarchySection()}</div>
+          <hr className={this.plusDarkTheme('attributesSectionSeparator')}/>
+          <div className="mb-2">
+            {this.renderMatchCylcerFields()}
           </div>
-          <button className="mr-1" onClick={() => this.onClickGetSelectors()}>Get Selectors</button>
-          <button onClick={() => this.onClickCopySelectorToClipboard()}>Copy to Clipboard</button>
-          <div className="mt-1">
-            {this.renderSettings()}
+          <div className="mb-4">
+            <button className="iconButton mr-1" onClick={() => this.onClickGetSelectors()} title={EN.REFRESH_BUTTON_TITLE}>{refreshIcon}</button>
+            <button
+              className="iconButton mr-1"
+              onClick={() => this.onToggleVisibilityClick()}
+              title={this.state.visibleOnly ? EN.VISIBLE_ONLY_OFF_BUTTON_TITLE : EN.VISIBLE_ONLY_BUTTON_TITLE }
+            >
+              {this.state.visibleOnly ? eyeIcon : eyeOffIcon}
+            </button>
+            <button className="iconButton" onClick={() => this.onClickCopySelectorToClipboard()} title={EN.COPY_SELECTOR_BUTTON_TITLE}>{clipboardIcon}</button>
           </div>
-          {this.getQuerySelectorString()}
+          <div>
+            <button className="iconButton" onClick={() => this.toggleDarkmodeClick()}>Darkmode</button>
+            <Settings
+              darkMode={this.state.darkMode}
+              chromeExtensionApi={this.chromeExtensionApi}
+            ></Settings>
+          </div>
       </div>
     );
   }
@@ -133,7 +205,7 @@ class App extends React.Component<IProps, IState> {
       <div>
         {this.state.attributesHierarchies.map((ah: AttributesHierarchy, i) => {
           return (
-            <div className="attributeRow d-flex mb-1">
+            <div className="attributeRow d-flex">
               {ah.map((attr, j) => this.renderAttributeButton(attr, i, j))}
             </div>
           );
@@ -144,55 +216,38 @@ class App extends React.Component<IProps, IState> {
 
   renderAttributeButton(attribute: Attribute, rowIdx: number, buttonIdx: number) {
     const selector = this.buildSelector(attribute);
+    let displaySelector = selector;
+    let className = 'attributeButton';
+    const isSelected = !!this.state.querySelectorState?.[rowIdx]?.[buttonIdx];
+    if (isSelected) {
+      className += ' selected';
+      const isNotted = this.state.querySelectorState[rowIdx][buttonIdx].startsWith(':not');
+      if (isNotted) {
+        className += ' notted';
+        displaySelector = `:not(${displaySelector})`;
+      }
+    }
     return (
       <div className="mr-1">
-        <button onClick={() => this.onAttributeButtonClick(selector, rowIdx, buttonIdx)}>{selector}</button>
-      </div>
-    );
-  }
-
-  renderMatchesFields() {
-    const currentMatch = this.state.matchState.currentMatch < 1 ? '-' : this.state.matchState.currentMatch;
-    const matchCount = this.state.matchState.matchCount < 1 ? '-' : this.state.matchState.matchCount;
-    return (
-      <div className="d-flex">
-        <button className="mr-1" onClick={() => this.onClickPrev()}>Prev</button>
-        <div className="totalMatchesCount mr-1"> {currentMatch} / {matchCount} </div>
-        <button onClick={() => this.onClickNext()}>Next</button>
-      </div>
-    );
-  }
-
-  renderVisibilityButton() {
-    return (
-      <div className="d-flex">
-        <button onClick={() => this.onToggleVisibilityClick()} title="Only selenium visible">
-          {this.state.visibleOnly ? eyeIcon : eyeOffIcon}
+        <button
+          className={className}
+          onClick={(event) => this.onAttributeButtonClick(event, selector, rowIdx, buttonIdx)}
+          title={EN.META_SELECTOR_BUTTON_TITLE}>
+            {displaySelector}
         </button>
       </div>
     );
   }
 
-  renderSettings() {
-    const settings = (
-      <div className="darkmode-setting">
-        todo settings
-      </div>
-    );
+  renderMatchCylcerFields() {
+    const currentMatch = this.state.matchState.currentMatch < 1 ? '-' : this.state.matchState.currentMatch;
+    const matchCount = this.state.matchState.matchCount < 1 ? '-' : this.state.matchState.matchCount;
     return (
-      <div className="settings">
-        <button onClick={() => this.onToggleSettingsExpandClick()}>{this.renderSettingsIcon()}</button>
-        {this.state.settingsExpanded ? settings : null}
+      <div className="d-flex">
+        <button className="iconButton mr-1" onClick={() => this.onClickPrev()} title={EN.PREVIOUS_BUTTON_TITLE}>{leftArrowsIcon}</button>
+        <div className="totalMatchesCount mr-1"> {currentMatch} / {matchCount} </div>
+        <button className="iconButton" onClick={() => this.onClickNext()} title={EN.NEXT_BUTTON_TITLE}>{rightArrowsIcon}</button>
       </div>
-    );
-  }
-
-  renderSettingsIcon() {
-    return (
-      <span>
-          {settingsIcon}
-          {this.state.settingsExpanded ? downArrowIcon : upArrowIcon}
-      </span>
     );
   }
 
@@ -263,7 +318,6 @@ class App extends React.Component<IProps, IState> {
 }
 
 /*
-
 - color code the parts, eg: div/span/etc are light grey, class is light blue, etc
 - add blacklist to filter out things, can either remove parts like element type, classes, ids, specific selectors like href or target or data-reactid, etc. OR disable a specific part type/value combo (eg: [data-reactid='17'])
 */

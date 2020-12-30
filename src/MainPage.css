@@ -1,0 +1,49 @@
+.attributesSectionSeparator {
+  border-top: 1px solid darkgray;
+}
+
+.attributesSectionSeparator.dark-theme {
+  border-top: 1px solid navajowhite;
+}
+
+.iconButton {
+  height: 2.3rem;
+  line-height: 50%;
+}
+
+.iconButton:hover {
+  background-color: rgb(223, 223, 223);
+}
+
+.settings-label {
+  font-size: medium;
+}
+
+.attributeButton {
+  background: #ccc;
+  border: 1px solid #888;
+  font-size: 1rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 150px;
+  transition: max-width 0s 200ms;
+}
+
+.attributeButton:focus {
+  max-width: 1000px;
+}
+
+.attributeButton:hover {
+  background: #ddd;
+  max-width: 1000px;
+}
+
+.attributeButton.selected {
+  background: lightblue;
+  max-width: 1000px;
+}
+
+.attributeButton.selected.notted {
+  background: #FF9999;
+}
