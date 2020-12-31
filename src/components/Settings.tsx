@@ -1,13 +1,12 @@
 import React from 'react';
-import './App.css';
-import ChromeExtensionApi from './ChromeExtensionApi';
+import ChromeExtensionApi from '../helpers/ChromeExtensionApi';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { downArrowIcon, settingsIcon, upArrowIcon } from './Icons';
 
 
 interface IProps {
     chromeExtensionApi: ChromeExtensionApi;
-    darkMode: boolean;
+    // localStorage: LocalStorage;
 }
 
 interface IState {
@@ -26,18 +25,16 @@ class Settings extends React.Component<IProps, IState> {
   }
 
   onToggleSettingsExpandClick() {
-    console.log(this.chromeExtensionApi.getStorage());
-    console.log(window.localStorage);
     this.setState({
       settingsExpanded: !this.state.settingsExpanded
     });
   }
 
+    //<input type="checkbox" value={this.props.localStorage.showTagNames}></input>
   render() {
     const settings = (
       <div className="">
           <div>
-              <input type="checkbox" ></input>
               <label>Show tag names</label>
           </div>
           <div>
