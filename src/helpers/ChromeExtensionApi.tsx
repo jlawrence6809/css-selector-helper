@@ -1,3 +1,4 @@
+import { textSpanIntersectsWithPosition } from 'typescript';
 import {injectString} from './EvalFunctions';
 
 /**
@@ -7,7 +8,7 @@ type RawChrome = {
   runtime: object,
   devtools: {
     panels: {
-      themeName: 'default' | 'dark',
+      themeName: ChromeTheme,
     },
     inspectedWindow: {
       eval: (evalString: string, callback: ((result: any, isException: boolean) => void)) => void,
@@ -33,6 +34,17 @@ type RawAttributesAndFramesHierarchy = {
   attributes: AttributesHierarchy[],
 };
 
+export enum ChromeTheme {
+  DEFAULT = 'default',
+  DARK = 'dark',
+}
+
+export enum CopyResult {
+  DEFAULT = "DEFAULT",
+  SUCCESS = "SUCCESS",
+  FAIL = "FAIL",
+}
+
 /**
  * Array of arrays consisting of name value pairs for the parts of page elements. Ie: {name: 'tagName', value: 'div'}
  * The first array of attributes is the one currently selected on the page, then the rest of the array is that elements
@@ -46,9 +58,9 @@ export type Attribute = {
 };
 
 export enum AttributeType {
- TagName = 'tagName',
- Id = 'id',
- Class = 'class',
+  TagName = 'tagName',
+  Id = 'id',
+  Class = 'class',
 };
 
 export type SelectElementResult = {
@@ -58,7 +70,7 @@ export type SelectElementResult = {
 
 export default class ChromeExtensionApi {
 
-  getTheme(): RawChrome["devtools"]["panels"]["themeName"]{
+  getTheme(): ChromeTheme {
     return this.getRawChromeApi().devtools.panels.themeName;
   }
 
@@ -86,13 +98,18 @@ export default class ChromeExtensionApi {
     };
   }
 
-  async copyTextToClipboard(text: String): Promise<void> {
-    return this.runInInspectedWindow(`copy("${text}")`);
+  async copyTextToClipboard(text: String): Promise<CopyResult> {
+    let res = await this.runInInspectedWindow('(function(){return window.copy + ""}())');
+    if (res !== 'function copy(value) { [Command Line API] }') {
+      console.error('Copy function overridden!', res);
+      return Promise.resolve(CopyResult.FAIL);
+    }
+    await this.runInInspectedWindow(`window.copy("${text}")`);
+    return Promise.resolve(CopyResult.SUCCESS);
   }
 
   getStorage() {
     const chrome = this.getRawChromeApi();
-
     return chrome;
   }
 
@@ -118,7 +135,8 @@ export default class ChromeExtensionApi {
     return await this.runInInspectedWindow(evalStr);
   }
 
-  private async runInInspectedWindow(evalString: string): Promise<any> {
+  // todo: make private
+  public async runInInspectedWindow(evalString: string): Promise<any> {
     const evalF = this.getRawChromeApi().devtools.inspectedWindow.eval;
     return new Promise((resolve, reject) => {
       evalF(evalString, (result, isException) => {

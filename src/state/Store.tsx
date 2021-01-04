@@ -1,7 +1,6 @@
 import React, {createContext, useReducer} from 'react';
-import { Actions, AttributeButtonClickType, ClickCopySelectorToClipboardType, ClickGetSelectorsType, ClickNextType, ClickPrevType, SetAttributesHierarchyAction, SetAttributesHierarchyType, ToggleDarkModeClickType, ToggleVisibilityClickType, UpdateMatchStateAction, UpdateMatchStateType, UpdateQuerySelectorStateAction, UpdateQuerySelectorStateType } from './Actions';
-import ChromeExtensionApi, { AttributesHierarchy, SelectElementResult } from '../helpers/ChromeExtensionApi';
-import { compareAttributesForSort, getQuerySelectorString } from '../helpers/Helpers';
+import { Actions } from './Actions';
+import ChromeExtensionApi, { AttributesHierarchy, CopyResult, SelectElementResult } from '../helpers/ChromeExtensionApi';
 import { INITIAL_LOCAL_STORAGE, LocalStorage } from '../helpers/LocalStorage';
 import { reducer } from './Reducer';
 import { dispatchEffectsMiddleware } from './Effects';
@@ -21,6 +20,7 @@ export interface IState {
     attributesHierarchies: AttributesHierarchy[];
     querySelectorState: QuerySelectorState;
     visibleOnly: boolean;
+    copyResult: CopyResult;
 }
 
 export const INITIAL_STATE: IState = {
@@ -37,10 +37,13 @@ export const INITIAL_STATE: IState = {
     attributesHierarchies: [],
     querySelectorState: [],
     visibleOnly: false,
+    copyResult: CopyResult.DEFAULT,
 };
 
 export type DispatchMiddleware = (action: Actions) => Promise<void>;
 export const StoreContext = createContext<{state: IState; dispatch: DispatchMiddleware}>({state: INITIAL_STATE, dispatch: () => new Promise(() => null)});
+
+// inpiration for effects/reducer pattern I used: https://gist.github.com/astoilkov/013c513e33fe95fa8846348038d8fe42
 
 const Store: React.FC = ({children}) => {
     const [state, dispatch] = useReducer(reducer, INITIAL_STATE);

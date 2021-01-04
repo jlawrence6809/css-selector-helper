@@ -1,6 +1,6 @@
-import ChromeExtensionApi, { AttributesHierarchy } from "../helpers/ChromeExtensionApi";
+import ChromeExtensionApi, { AttributesHierarchy, CopyResult } from "../helpers/ChromeExtensionApi";
 import { getQuerySelectorString, compareAttributesForSort } from "../helpers/Helpers";
-import { Actions, AttributeButtonClickType, UpdateQuerySelectorStateAction, UpdateMatchStateAction, ClickGetSelectorsType, SetAttributesHierarchyAction, ClickCopySelectorToClipboardType, ToggleVisibilityClickType, ClickNextType, ClickPrevType } from "./Actions";
+import { Actions, AttributeButtonClickType, UpdateQuerySelectorStateAction, UpdateMatchStateAction, ClickGetSelectorsType, SetAttributesHierarchyAction, ClickCopySelectorToClipboardType, ToggleVisibilityClickType, ClickNextType, ClickPrevType, CopyResultAction } from "./Actions";
 import { QuerySelectorState, MatchState, INITIAL_STATE, DispatchMiddleware } from "./Store";
 
 // intercepts what would normally be a call to the dispatch reducer to do effects. can get an easy reference to current state here?
@@ -34,7 +34,11 @@ export function dispatchEffectsMiddleware(dispatch: React.Dispatch<Actions>, chr
                 }
                 break;
             case ClickCopySelectorToClipboardType:
-                await chromeExtensionApi.copyTextToClipboard(action.selector);
+                const copyResult = await chromeExtensionApi.copyTextToClipboard('hi!');
+                dispatch(new CopyResultAction(copyResult));
+                if (copyResult === CopyResult.SUCCESS) {
+                    setTimeout(() => dispatch(new CopyResultAction(CopyResult.DEFAULT)), 600);
+                }
             break;
             case ToggleVisibilityClickType: {
                     const matchState: MatchState = await refreshMatchesState(chromeExtensionApi, action.querySelector, action.visibleOnly);

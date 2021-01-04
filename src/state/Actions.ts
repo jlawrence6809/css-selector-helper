@@ -1,4 +1,4 @@
-import { AttributesHierarchy } from "../helpers/ChromeExtensionApi";
+import { AttributesHierarchy, CopyResult } from "../helpers/ChromeExtensionApi";
 import { MatchState, QuerySelectorState } from "./Store";
 
 interface Action {
@@ -87,6 +87,14 @@ export class UpdateQuerySelectorStateAction implements Action {
     ) {}
 }
 
+export const CopyResultActionType = 'CopyResultActionType';
+export class CopyResultAction implements Action {
+    readonly type = CopyResultActionType;
+    constructor(
+        public copyResult: CopyResult,
+    ) {}
+}
+
 export type Actions = 
     AttributeButtonClickAction
     | ClickGetSelectorsAction
@@ -97,4 +105,5 @@ export type Actions =
     | ClickNextAction
     | SetAttributesHierarchyAction
     | UpdateMatchStateAction
-    | UpdateQuerySelectorStateAction;
+    | UpdateQuerySelectorStateAction
+    | CopyResultAction;

@@ -1,8 +1,8 @@
 import React, {useContext, useEffect} from 'react';
 import './MainPage.css';
-import { Attribute, AttributesHierarchy } from '../helpers/ChromeExtensionApi';
+import { Attribute, AttributesHierarchy, ChromeTheme, CopyResult } from '../helpers/ChromeExtensionApi';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import { clipboardIcon, eyeIcon, eyeOffIcon, leftArrowsIcon, refreshIcon, rightArrowsIcon } from './Icons';
+import { alertCircleIcon, checkIcon, clipboardIcon, eyeIcon, eyeOffIcon, leftArrowsIcon, refreshIcon, rightArrowsIcon } from './Icons';
 import { EN } from '../helpers/Localization';
 import Settings from './Settings';
 import { MatchState, StoreContext } from '../state/Store';
@@ -14,6 +14,9 @@ export const MainPage = () => {
 
     useEffect(() => {
         dispatch(new ClickGetSelectorsAction());
+        if (state.chromeExtensionApi.getTheme() === ChromeTheme.DARK) {
+          dispatch(new ToggleDarkModeClickAction());
+        }
     }, [] /* only run at startup? */);
 
     const refreshSelectorsButton = (
@@ -36,13 +39,15 @@ export const MainPage = () => {
         </button>
     );
 
+    const currentQuerySelector = getQuerySelectorString(state.querySelectorState);
     const copySelectorButton = (
         <button
             className="iconButton"
-            onClick={() => dispatch(new ClickCopySelectorToClipboardAction(getQuerySelectorString(state.querySelectorState)))}
-            title={EN.COPY_SELECTOR_BUTTON_TITLE}
+            onClick={() => dispatch(new ClickCopySelectorToClipboardAction(currentQuerySelector))}
+            disabled={currentQuerySelector === '' || state.copyResult !== CopyResult.DEFAULT}
+            title={state.copyResult === CopyResult.FAIL ? EN.COPY_SELECTOR_BUTTON_TITLE_ERROR : EN.COPY_SELECTOR_BUTTON_TITLE}
         >
-            {clipboardIcon}
+            {state.copyResult === CopyResult.DEFAULT ? clipboardIcon : state.copyResult === CopyResult.SUCCESS ? checkIcon : alertCircleIcon}
         </button>
     );
 
@@ -50,19 +55,24 @@ export const MainPage = () => {
       <div className={PlusDarkTheme('App pl-1 pb-1')}>
           <div className="mb-1">{AttributesHierarchyComponent(state.attributesHierarchies)}</div>
           <hr className={PlusDarkTheme('attributesSectionSeparator')}/>
-          <div className="mb-2">
-            {MatchCyclerComponent(state.matchState)}
-          </div>
-          <div className="mb-4">
-            {refreshSelectorsButton}
-            {visibleOnlyButton}
-            {copySelectorButton}
+          <div>
+            <div className="mb-2">
+              {MatchCyclerComponent(state.matchState)}
+            </div>
+            <div className="mb-2">
+              {refreshSelectorsButton}
+              {visibleOnlyButton}
+              {copySelectorButton}
+            </div>
+            <div className="mb-2">
+              {CurrentQueryDisplayComponent(currentQuerySelector)}
+            </div>
           </div>
           <div>
-            <button className="iconButton" onClick={() => dispatch(new ToggleDarkModeClickAction())}>Darkmode</button>
             <Settings
               chromeExtensionApi={state.chromeExtensionApi}
             ></Settings>
+            <button className="iconButton" onClick={() => dispatch(new ToggleDarkModeClickAction())}>Darkmode</button>
           </div>
       </div>
     );
@@ -144,6 +154,32 @@ const MatchCyclerComponent = (matchState: MatchState) => {
       </div>
     );
 }
+
+const CurrentQueryDisplayComponent = (currentQuerySelector: string) => {
+  const styles = {
+    backgroundColor: 'rgb(170, 170, 170)',
+    resize: 'both',
+  } as React.CSSProperties;
+
+  const onCurrentQueryDisplayFocus = (event: React.MouseEvent<HTMLTextAreaElement, MouseEvent>) => {
+    const currentQueryDisplayInput = event.target as HTMLTextAreaElement;
+    currentQueryDisplayInput.select();
+  };
+  return (
+    <div>
+      <textarea
+        className="currentQueryDisplay"
+        value={currentQuerySelector}
+        style={styles}
+        readOnly={true}
+        title={EN.CURRENT_QUERY_DISPLAY_TITLE}
+        onClick={(ev) => onCurrentQueryDisplayFocus(ev)}
+        onContextMenu={(ev) => onCurrentQueryDisplayFocus(ev)}
+      ></textarea>
+    </div>
+  );
+  
+};
 
 // HELPERS
 

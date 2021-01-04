@@ -1,4 +1,4 @@
-import { Actions, UpdateQuerySelectorStateType, SetAttributesHierarchyType, ToggleVisibilityClickType, UpdateMatchStateType, ToggleDarkModeClickType } from "./Actions";
+import { Actions, UpdateQuerySelectorStateType, SetAttributesHierarchyType, ToggleVisibilityClickType, UpdateMatchStateType, ToggleDarkModeClickType, CopyResultActionType } from "./Actions";
 import { IState } from "./Store";
 
 export function reducer(state: IState, action: Actions): IState {
@@ -24,10 +24,16 @@ export function reducer(state: IState, action: Actions): IState {
                 matchState: action.matchState,
             };
         case ToggleDarkModeClickType:
-            document.documentElement.style.backgroundColor = state.darkMode ? '#FFFFFF' : '#282c34';
+            const newDarkMode = !state.darkMode;
+            document.documentElement.style.backgroundColor = newDarkMode ? '#282c34' : '#FFFFFF';
             return {
                 ...state,
-                darkMode: !state.darkMode,
+                darkMode: newDarkMode,
+            };
+        case CopyResultActionType:
+            return {
+                ...state,
+                copyResult: action.copyResult,
             };
     }
     return state;
