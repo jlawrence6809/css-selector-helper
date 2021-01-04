@@ -4,6 +4,7 @@ import ChromeExtensionApi, { AttributesHierarchy, CopyResult, SelectElementResul
 import { INITIAL_LOCAL_STORAGE, LocalStorage } from '../helpers/LocalStorage';
 import { reducer } from './Reducer';
 import { dispatchEffectsMiddleware } from './Effects';
+import { CN, EN, Localization } from '../helpers/Localization';
 
 // https://dev.to/elisealcala/react-context-with-usereducer-and-typescript-4obm
 
@@ -14,6 +15,7 @@ export type MatchState = SelectElementResult;
 
 export interface IState {
     darkMode: boolean;
+    localization: Localization,
     chromeExtensionApi: ChromeExtensionApi,
     localStorage: LocalStorage;
     matchState: MatchState;
@@ -25,6 +27,7 @@ export interface IState {
 
 export const INITIAL_STATE: IState = {
     darkMode: false,
+    localization: CN,
     chromeExtensionApi: chromeExtensionApi,
     localStorage: {
         ...INITIAL_LOCAL_STORAGE,

@@ -23,7 +23,7 @@ export const MainPage = () => {
         <button
             className="iconButton mr-1"
             onClick={() => dispatch(new ClickGetSelectorsAction())}
-            title={EN.REFRESH_BUTTON_TITLE}
+            title={state.localization.REFRESH_BUTTON_TITLE}
         >
             {refreshIcon}
         </button>
@@ -33,7 +33,7 @@ export const MainPage = () => {
         <button
             className="iconButton mr-1"
             onClick={() => dispatch(new ToggleVisibilityClickAction(getQuerySelectorString(state.querySelectorState), !state.visibleOnly))}
-            title={state.visibleOnly ? EN.VISIBLE_ONLY_OFF_BUTTON_TITLE : EN.VISIBLE_ONLY_BUTTON_TITLE }
+            title={state.visibleOnly ? state.localization.VISIBLE_ONLY_OFF_BUTTON_TITLE : state.localization.VISIBLE_ONLY_BUTTON_TITLE }
         >
             {state.visibleOnly ? eyeIcon : eyeOffIcon}
         </button>
@@ -45,7 +45,7 @@ export const MainPage = () => {
             className="iconButton"
             onClick={() => dispatch(new ClickCopySelectorToClipboardAction(currentQuerySelector))}
             disabled={currentQuerySelector === '' || state.copyResult !== CopyResult.DEFAULT}
-            title={state.copyResult === CopyResult.FAIL ? EN.COPY_SELECTOR_BUTTON_TITLE_ERROR : EN.COPY_SELECTOR_BUTTON_TITLE}
+            title={state.copyResult === CopyResult.FAIL ? state.localization.COPY_SELECTOR_BUTTON_TITLE_ERROR : state.localization.COPY_SELECTOR_BUTTON_TITLE}
         >
             {state.copyResult === CopyResult.DEFAULT ? clipboardIcon : state.copyResult === CopyResult.SUCCESS ? checkIcon : alertCircleIcon}
         </button>
@@ -126,7 +126,7 @@ const AttributeButton = (
                 rowIdx,
                 buttonIdx
             ))}
-          title={EN.META_SELECTOR_BUTTON_TITLE}>
+          title={state.localization.META_SELECTOR_BUTTON_TITLE}>
             {displaySelector}
         </button>
       </div>
@@ -144,18 +144,19 @@ const MatchCyclerComponent = (matchState: MatchState) => {
             querySelector,
             state.matchState.currentMatch,
             state.visibleOnly,
-        ))} title={EN.PREVIOUS_BUTTON_TITLE}>{leftArrowsIcon}</button>
+        ))} title={state.localization.PREVIOUS_BUTTON_TITLE}>{leftArrowsIcon}</button>
         <div className="totalMatchesCount mr-1"> {currentMatch} / {matchCount} </div>
         <button className="iconButton" onClick={() => dispatch(new ClickNextAction(
             querySelector,
             state.matchState.currentMatch,
             state.visibleOnly,
-        ))} title={EN.NEXT_BUTTON_TITLE}>{rightArrowsIcon}</button>
+        ))} title={state.localization.NEXT_BUTTON_TITLE}>{rightArrowsIcon}</button>
       </div>
     );
 }
 
 const CurrentQueryDisplayComponent = (currentQuerySelector: string) => {
+  const {state} = useContext(StoreContext);
   const styles = {
     backgroundColor: 'rgb(170, 170, 170)',
     resize: 'both',
@@ -172,7 +173,8 @@ const CurrentQueryDisplayComponent = (currentQuerySelector: string) => {
         value={currentQuerySelector}
         style={styles}
         readOnly={true}
-        title={EN.CURRENT_QUERY_DISPLAY_TITLE}
+        title={state.localization.CURRENT_QUERY_DISPLAY_TITLE}
+        placeholder={state.localization.CURRENT_QUERY_DISPLAY_PLACEHOLDER}
         onClick={(ev) => onCurrentQueryDisplayFocus(ev)}
         onContextMenu={(ev) => onCurrentQueryDisplayFocus(ev)}
       ></textarea>

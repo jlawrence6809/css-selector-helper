@@ -1,5 +1,5 @@
 import { Actions, UpdateQuerySelectorStateType, SetAttributesHierarchyType, ToggleVisibilityClickType, UpdateMatchStateType, ToggleDarkModeClickType, CopyResultActionType } from "./Actions";
-import { IState } from "./Store";
+import { INITIAL_STATE, IState } from "./Store";
 
 export function reducer(state: IState, action: Actions): IState {
     switch(action.type) {
@@ -11,6 +11,7 @@ export function reducer(state: IState, action: Actions): IState {
         case SetAttributesHierarchyType:
             return {
                 ...state,
+                querySelectorState: INITIAL_STATE.querySelectorState,
                 attributesHierarchies: action.attributesHierarchy,
             };
         case ToggleVisibilityClickType:
