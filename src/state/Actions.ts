@@ -95,6 +95,54 @@ export class CopyResultAction implements Action {
     ) {}
 }
 
+export const ToggleSettingsExpansionActionType = 'ToggleSettingsExpansionActionType';
+export class ToggleSettingsExpansionAction implements Action {
+    readonly type = ToggleSettingsExpansionActionType;
+}
+
+export const ShowQuerySelectorActionType = 'ShowQuerySelectorActionType';
+export class ShowQuerySelectorAction implements Action {
+    readonly type = ShowQuerySelectorActionType;
+}
+
+export const ShowTagNamesClickedActionType = 'ShowTagNamesClickedActionType';
+export class ShowTagNamesClickedAction implements Action {
+    readonly type = ShowTagNamesClickedActionType;
+}
+
+export const ShowIdsClickedActionType = 'ShowIdsClickedActionType';
+export class ShowIdsClickedAction implements Action {
+    readonly type = ShowIdsClickedActionType;
+}
+
+export const ShowClassesClickedActionType = 'ShowClassesClickedActionType';
+export class ShowClassesClickedAction implements Action {
+    readonly type = ShowClassesClickedActionType;
+}
+
+export const ShowOtherAttributesClickedActionType = 'ShowOtherAttributesClickedActionType';
+export class ShowOtherAttributesClickedAction implements Action {
+    readonly type = ShowOtherAttributesClickedActionType;
+}
+
+export const CustomTagFilterChangeActionType = 'CustomTagFilterChangeActionType';
+export class CustomTagFilterChangeAction implements Action {
+    readonly type = CustomTagFilterChangeActionType;
+    constructor(
+        public value: string,
+    ){}
+}
+
+export const CustomTagFilterCancelActionType = 'CustomTagFilterCancelActionType';
+export class CustomTagFilterCancelAction implements Action {
+    readonly type = CustomTagFilterCancelActionType;
+}
+
+export const CustomTagFilterSaveActionType = 'CustomTagFilterSaveActionType';
+export class CustomTagFilterSaveAction implements Action {
+    readonly type = CustomTagFilterSaveActionType;
+}
+
 export type Actions = 
     AttributeButtonClickAction
     | ClickGetSelectorsAction
@@ -106,4 +154,13 @@ export type Actions =
     | SetAttributesHierarchyAction
     | UpdateMatchStateAction
     | UpdateQuerySelectorStateAction
-    | CopyResultAction;
+    | CopyResultAction
+    | ToggleSettingsExpansionAction
+    | ShowQuerySelectorAction
+    | ShowTagNamesClickedAction
+    | ShowIdsClickedAction
+    | ShowClassesClickedAction
+    | ShowOtherAttributesClickedAction
+    | CustomTagFilterChangeAction
+    | CustomTagFilterCancelAction
+    | CustomTagFilterSaveAction;

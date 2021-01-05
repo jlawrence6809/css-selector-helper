@@ -3,11 +3,11 @@ import './MainPage.css';
 import { Attribute, AttributesHierarchy, ChromeTheme, CopyResult } from '../helpers/ChromeExtensionApi';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { alertCircleIcon, checkIcon, clipboardIcon, eyeIcon, eyeOffIcon, leftArrowsIcon, refreshIcon, rightArrowsIcon } from './Icons';
-import { EN } from '../helpers/Localization';
 import Settings from './Settings';
 import { MatchState, StoreContext } from '../state/Store';
 import { AttributeButtonClickAction, ClickCopySelectorToClipboardAction, ClickGetSelectorsAction, ClickNextAction, ClickPrevAction, ToggleDarkModeClickAction, ToggleVisibilityClickAction } from '../state/Actions';
 import { buildSelector, getQuerySelectorString } from '../helpers/Helpers';
+import PlusDarkTheme from './PlusDarkTheme';
   
 export const MainPage = () => {
     const {state, dispatch} = useContext(StoreContext);
@@ -42,7 +42,7 @@ export const MainPage = () => {
     const currentQuerySelector = getQuerySelectorString(state.querySelectorState);
     const copySelectorButton = (
         <button
-            className="iconButton"
+            className={'iconButton' + (state.copyResult === CopyResult.FAIL ? ' error' : '')}
             onClick={() => dispatch(new ClickCopySelectorToClipboardAction(currentQuerySelector))}
             disabled={currentQuerySelector === '' || state.copyResult !== CopyResult.DEFAULT}
             title={state.copyResult === CopyResult.FAIL ? state.localization.COPY_SELECTOR_BUTTON_TITLE_ERROR : state.localization.COPY_SELECTOR_BUTTON_TITLE}
@@ -64,15 +64,15 @@ export const MainPage = () => {
               {visibleOnlyButton}
               {copySelectorButton}
             </div>
-            <div className="mb-2">
-              {CurrentQueryDisplayComponent(currentQuerySelector)}
-            </div>
+            {
+              state.showQuerySelector ?
+              (<div className="mb-2">
+                {CurrentQueryDisplayComponent(currentQuerySelector)}
+              </div>) : null
+            }
           </div>
           <div>
-            <Settings
-              chromeExtensionApi={state.chromeExtensionApi}
-            ></Settings>
-            <button className="iconButton" onClick={() => dispatch(new ToggleDarkModeClickAction())}>Darkmode</button>
+            {Settings()}
           </div>
       </div>
     );
@@ -158,8 +158,8 @@ const MatchCyclerComponent = (matchState: MatchState) => {
 const CurrentQueryDisplayComponent = (currentQuerySelector: string) => {
   const {state} = useContext(StoreContext);
   const styles = {
-    backgroundColor: 'rgb(170, 170, 170)',
-    resize: 'both',
+    backgroundColor: '#ccc',
+    resize: 'vertical',
   } as React.CSSProperties;
 
   const onCurrentQueryDisplayFocus = (event: React.MouseEvent<HTMLTextAreaElement, MouseEvent>) => {
@@ -167,9 +167,9 @@ const CurrentQueryDisplayComponent = (currentQuerySelector: string) => {
     currentQueryDisplayInput.select();
   };
   return (
-    <div>
+    <div className="pr-2">
       <textarea
-        className="currentQueryDisplay"
+        className="currentQueryDisplay w-100"
         value={currentQuerySelector}
         style={styles}
         readOnly={true}
@@ -182,11 +182,3 @@ const CurrentQueryDisplayComponent = (currentQuerySelector: string) => {
   );
   
 };
-
-// HELPERS
-
-// todo: make this a hook?
-const PlusDarkTheme = (classString: string) => {
-    const {state} = useContext(StoreContext);
-    return classString + (state.darkMode ? ' dark-theme' : '');
-}

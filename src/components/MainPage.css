@@ -15,6 +15,10 @@
   background-color: rgb(223, 223, 223);
 }
 
+.iconButton.error {
+  background: #FF9999;
+}
+
 .settings-label {
   font-size: medium;
 }

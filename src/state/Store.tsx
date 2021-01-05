@@ -1,10 +1,10 @@
 import React, {createContext, useReducer} from 'react';
 import { Actions } from './Actions';
 import ChromeExtensionApi, { AttributesHierarchy, CopyResult, SelectElementResult } from '../helpers/ChromeExtensionApi';
-import { INITIAL_LOCAL_STORAGE, LocalStorage } from '../helpers/LocalStorage';
 import { reducer } from './Reducer';
 import { dispatchEffectsMiddleware } from './Effects';
-import { CN, EN, Localization } from '../helpers/Localization';
+import { EN, Localization } from '../helpers/Localization';
+import LocalStorageHelper from '../helpers/LocalStorage';
 
 // https://dev.to/elisealcala/react-context-with-usereducer-and-typescript-4obm
 
@@ -17,22 +17,25 @@ export interface IState {
     darkMode: boolean;
     localization: Localization,
     chromeExtensionApi: ChromeExtensionApi,
-    localStorage: LocalStorage;
     matchState: MatchState;
     attributesHierarchies: AttributesHierarchy[];
     querySelectorState: QuerySelectorState;
     visibleOnly: boolean;
     copyResult: CopyResult;
+    settingsExpanded: boolean;
+    showQuerySelector: boolean;
+    showTagNames: boolean;
+    showIds: boolean;
+    showClasses: boolean;
+    showOtherAttributes: boolean;
+    customTagFilters: string;
+    customTagFiltersUnsaved: string;
 }
 
 export const INITIAL_STATE: IState = {
     darkMode: false,
-    localization: CN,
+    localization: EN,
     chromeExtensionApi: chromeExtensionApi,
-    localStorage: {
-        ...INITIAL_LOCAL_STORAGE,
-        ...window.localStorage,
-    },
     matchState: {
         currentMatch: -1,
         matchCount: -1
@@ -41,6 +44,14 @@ export const INITIAL_STATE: IState = {
     querySelectorState: [],
     visibleOnly: false,
     copyResult: CopyResult.DEFAULT,
+    settingsExpanded: false,
+    showQuerySelector: LocalStorageHelper.getShowQuerySelector(),
+    showTagNames: LocalStorageHelper.getShowTagNames(),
+    showIds: LocalStorageHelper.getShowIds(),
+    showClasses: LocalStorageHelper.getShowClasses(),
+    showOtherAttributes: LocalStorageHelper.getShowOtherAttributes(),
+    customTagFilters: LocalStorageHelper.getCustomTagFilters(),
+    customTagFiltersUnsaved: LocalStorageHelper.getCustomTagFilters(),
 };
 
 export type DispatchMiddleware = (action: Actions) => Promise<void>;
@@ -50,7 +61,7 @@ export const StoreContext = createContext<{state: IState; dispatch: DispatchMidd
 
 const Store: React.FC = ({children}) => {
     const [state, dispatch] = useReducer(reducer, INITIAL_STATE);
-    const middleware = dispatchEffectsMiddleware(dispatch, chromeExtensionApi);
+    const middleware = dispatchEffectsMiddleware(dispatch, state, chromeExtensionApi);
     return (<StoreContext.Provider value={{state, dispatch: middleware}}>{children}</StoreContext.Provider>);
 }
 

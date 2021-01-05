@@ -1,10 +1,11 @@
 import ChromeExtensionApi, { AttributesHierarchy, CopyResult } from "../helpers/ChromeExtensionApi";
 import { getQuerySelectorString, compareAttributesForSort } from "../helpers/Helpers";
-import { Actions, AttributeButtonClickType, UpdateQuerySelectorStateAction, UpdateMatchStateAction, ClickGetSelectorsType, SetAttributesHierarchyAction, ClickCopySelectorToClipboardType, ToggleVisibilityClickType, ClickNextType, ClickPrevType, CopyResultAction } from "./Actions";
-import { QuerySelectorState, MatchState, INITIAL_STATE, DispatchMiddleware } from "./Store";
+import LocalStorageHelper from "../helpers/LocalStorage";
+import { Actions, AttributeButtonClickType, UpdateQuerySelectorStateAction, UpdateMatchStateAction, ClickGetSelectorsType, SetAttributesHierarchyAction, ClickCopySelectorToClipboardType, ToggleVisibilityClickType, ClickNextType, ClickPrevType, CopyResultAction, CustomTagFilterCancelActionType, CustomTagFilterChangeActionType, CustomTagFilterSaveActionType, ShowClassesClickedActionType, ShowIdsClickedActionType, ShowOtherAttributesClickedActionType, ShowQuerySelectorActionType, ShowTagNamesClickedActionType } from "./Actions";
+import { QuerySelectorState, MatchState, INITIAL_STATE, DispatchMiddleware, IState } from "./Store";
 
 // intercepts what would normally be a call to the dispatch reducer to do effects. can get an easy reference to current state here?
-export function dispatchEffectsMiddleware(dispatch: React.Dispatch<Actions>, chromeExtensionApi: ChromeExtensionApi): DispatchMiddleware {
+export function dispatchEffectsMiddleware(dispatch: React.Dispatch<Actions>, state: IState, chromeExtensionApi: ChromeExtensionApi): DispatchMiddleware {
     return async (action: Actions) => {
         switch(action.type) {
             case AttributeButtonClickType: {
@@ -34,9 +35,10 @@ export function dispatchEffectsMiddleware(dispatch: React.Dispatch<Actions>, chr
                 }
                 break;
             case ClickCopySelectorToClipboardType:
-                const copyResult = await chromeExtensionApi.copyTextToClipboard('hi!');
+                const copyResult = await chromeExtensionApi.copyTextToClipboard(action.selector);
                 dispatch(new CopyResultAction(copyResult));
                 if (copyResult === CopyResult.SUCCESS) {
+                    // if successful we flash a success icon, then we need to reset it
                     setTimeout(() => dispatch(new CopyResultAction(CopyResult.DEFAULT)), 600);
                 }
             break;
@@ -66,8 +68,33 @@ export function dispatchEffectsMiddleware(dispatch: React.Dispatch<Actions>, chr
                     dispatch(new UpdateMatchStateAction(matchState));
                 }
                 break;
+            
+            case ShowQuerySelectorActionType:
+                LocalStorageHelper.setShowQuerySelector(!state.showQuerySelector);
+                dispatch(action);
+                break;
+            case ShowTagNamesClickedActionType:
+                LocalStorageHelper.setShowTagNames(!state.showTagNames);
+                dispatch(action);
+                break;
+            case ShowIdsClickedActionType:
+                LocalStorageHelper.setShowIds(!state.showIds);
+                dispatch(action);
+                break;
+            case ShowClassesClickedActionType:
+                LocalStorageHelper.setShowClasses(!state.showClasses);
+                dispatch(action);
+                break;
+            case ShowOtherAttributesClickedActionType:
+                LocalStorageHelper.setShowOtherAttributes(!state.showOtherAttributes);
+                dispatch(action);
+                break;
+            case CustomTagFilterSaveActionType:
+                LocalStorageHelper.setCustomTagFilters(state.customTagFiltersUnsaved);
+                dispatch(action);
+                break;
             default:
-                return dispatch(action);
+                dispatch(action);
         }
     };
 }

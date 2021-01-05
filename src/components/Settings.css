@@ -1,0 +1,29 @@
+.settingsBody {
+  border-left: 1px solid darkgray;
+}
+
+.settingsBody.dark-theme {
+  border-left: 1px solid navajowhite;
+}
+
+.helpText {
+  font-size: medium;
+  font-style: italic;
+}
+
+.checkbox {
+  display: flex;
+  align-items: center;
+}
+
+.checkbox input {
+  width: 20px;
+  height: 20px;
+}
+
+.customTagFilters textarea {
+  resize: vertical;
+  white-space: pre;
+  overflow-wrap: normal;
+  overflow-x: scroll;
+}
