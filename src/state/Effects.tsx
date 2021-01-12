@@ -68,7 +68,6 @@ export function dispatchEffectsMiddleware(dispatch: React.Dispatch<Actions>, sta
                     dispatch(new UpdateMatchStateAction(matchState));
                 }
                 break;
-            
             case ShowQuerySelectorActionType:
                 LocalStorageHelper.setShowQuerySelector(!state.showQuerySelector);
                 dispatch(action);

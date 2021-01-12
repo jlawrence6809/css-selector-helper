@@ -44,3 +44,14 @@ export function getQuerySelectorString(selectors: QuerySelectorState): string {
       .filter(sel => !!sel)
       .join(' ');
 }
+
+export function testCustomTagFilters(customTagFilters: string): string | null {
+  const tagFilters = customTagFilters?.split('\n')
+      ?.filter(s => s !== '');
+  try {
+      tagFilters.forEach(f => RegExp(f));
+  } catch(e) {
+      return e.message;
+  }
+  return null;
+}

@@ -2,7 +2,7 @@ import React, { useContext } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './Settings.css';
 import { cancelXIcon, checkIcon, downArrowIcon, helpCircleIcon, settingsIcon, upArrowIcon } from './Icons';
-import { CustomTagFilterCancelAction, CustomTagFilterChangeAction, CustomTagFilterSaveAction, ShowClassesClickedAction, ShowIdsClickedAction, ShowOtherAttributesClickedAction, ShowQuerySelectorAction, ShowTagNamesClickedAction, ToggleDarkModeClickAction, ToggleSettingsExpansionAction } from '../state/Actions';
+import { Actions, CustomTagFilterCancelAction, CustomTagFilterChangeAction, CustomTagFilterSaveAction, ShowClassesClickedAction, ShowIdsClickedAction, ShowOtherAttributesClickedAction, ShowQuerySelectorAction, ShowTagNamesClickedAction, ToggleDarkModeClickAction, ToggleSettingsExpansionAction } from '../state/Actions';
 import { StoreContext } from '../state/Store';
 import PlusDarkTheme from './PlusDarkTheme';
 
@@ -32,28 +32,21 @@ const Settings = () => {
     }, 100);
   };
 
+  const getCheckbox = (checked: boolean, action: Actions, label: string) => {
+
+    <div className="checkbox">
+    <input type="checkbox" className="mr-2" checked={checked} onClick={() => dispatch(action)}></input>
+    <label className="mb-0">{label}</label>
+  </div>
+  };
+
   const settings = (
     <div className={PlusDarkTheme("settingsBody ml-2 pl-3 mb-3")}>
-        <div className="checkbox">
-          <input type="checkbox" className="mr-2" checked={state.showQuerySelector} onClick={() => dispatch(new ShowQuerySelectorAction())}></input>
-          <label className="mb-0">{state.localization.SETTINGS_SHOW_QUERY_SELECTOR}</label>
-        </div>
-        <div className="checkbox">
-          <input type="checkbox" className="mr-2" checked={state.showTagNames} onClick={() => dispatch(new ShowTagNamesClickedAction())}></input>
-          <label className="mb-0">{state.localization.SETTINGS_SHOW_TAG_NAMES}</label>
-        </div>
-        <div className="checkbox">
-          <input type="checkbox" className="mr-2" checked={state.showIds} onClick={() => dispatch(new ShowIdsClickedAction())}></input>
-          <label className="mb-0">{state.localization.SETTINGS_SHOW_IDS}</label>
-        </div>
-        <div className="checkbox">
-          <input type="checkbox" className="mr-2" checked={state.showClasses} onClick={() => dispatch(new ShowClassesClickedAction())}></input>
-          <label className="mb-0">{state.localization.SETTINGS_SHOW_CLASSES}</label>
-        </div>
-        <div className="checkbox">
-          <input type="checkbox" className="mr-2" checked={state.showOtherAttributes} onClick={() => dispatch(new ShowOtherAttributesClickedAction())}></input>
-          <label className="mb-0">{state.localization.SETTINGS_SHOW_OTHER_ATTRIBUTES}</label>
-        </div>
+        {getCheckbox(state.showQuerySelector, new ShowQuerySelectorAction(), state.localization.SETTINGS_SHOW_QUERY_SELECTOR)}
+        {getCheckbox(state.showTagNames, new ShowTagNamesClickedAction(), state.localization.SETTINGS_SHOW_TAG_NAMES)}
+        {getCheckbox(state.showIds, new ShowIdsClickedAction(), state.localization.SETTINGS_SHOW_IDS)}
+        {getCheckbox(state.showClasses, new ShowClassesClickedAction(), state.localization.SETTINGS_SHOW_CLASSES)}
+        {getCheckbox(state.showOtherAttributes, new ShowOtherAttributesClickedAction(), state.localization.SETTINGS_SHOW_OTHER_ATTRIBUTES)}
         <div className="customTagFilters mt-2">
           <label>{state.localization.SETTINGS_CUSTOM_TAG_FILTERS}:</label>
           <div className="ml-3 mr-2">
@@ -76,6 +69,7 @@ const Settings = () => {
                 disabled={state.customTagFilters === state.customTagFiltersUnsaved}
                 onClick={() => dispatch(new CustomTagFilterSaveAction())}
               > {checkIcon} </button>
+              <div>{state.customTagFiltersError}</div>
             </div>
           </div>
         </div>

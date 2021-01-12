@@ -31,7 +31,7 @@ export const EN: Localization = {
     CURRENT_QUERY_DISPLAY_PLACEHOLDER: 'Click attributes to build query',
     SETTINGS_SHOW_QUERY_SELECTOR: 'Show query selector',
     SETTINGS_SHOW_TAG_NAMES: 'Show tag name attributes',
-    SETTINGS_SHOW_IDS: 'Show id attributes',
+    SETTINGS_SHOW_IDS: 'Show Id attributes',
     SETTINGS_SHOW_CLASSES: 'Show class attributes',
     SETTINGS_SHOW_OTHER_ATTRIBUTES: 'Show other attributes',
     SETTINGS_CUSTOM_TAG_FILTERS: 'Custom Tag Filters',

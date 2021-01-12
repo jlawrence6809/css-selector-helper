@@ -45,11 +45,6 @@ export enum CopyResult {
   FAIL = "FAIL",
 }
 
-/**
- * Array of arrays consisting of name value pairs for the parts of page elements. Ie: {name: 'tagName', value: 'div'}
- * The first array of attributes is the one currently selected on the page, then the rest of the array is that elements
- * parents as you ascend the html tree ending at the <body>.
- */
 export type AttributesHierarchy = [Attribute];
 
 export type Attribute = {

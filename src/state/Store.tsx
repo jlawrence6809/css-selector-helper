@@ -5,6 +5,7 @@ import { reducer } from './Reducer';
 import { dispatchEffectsMiddleware } from './Effects';
 import { EN, Localization } from '../helpers/Localization';
 import LocalStorageHelper from '../helpers/LocalStorage';
+import { testCustomTagFilters } from '../helpers/Helpers';
 
 // https://dev.to/elisealcala/react-context-with-usereducer-and-typescript-4obm
 
@@ -18,6 +19,7 @@ export interface IState {
     localization: Localization,
     chromeExtensionApi: ChromeExtensionApi,
     matchState: MatchState;
+    unfilteredAttributesHierarchies: AttributesHierarchy[];
     attributesHierarchies: AttributesHierarchy[];
     querySelectorState: QuerySelectorState;
     visibleOnly: boolean;
@@ -30,6 +32,7 @@ export interface IState {
     showOtherAttributes: boolean;
     customTagFilters: string;
     customTagFiltersUnsaved: string;
+    customTagFiltersError: string | null;
 }
 
 export const INITIAL_STATE: IState = {
@@ -40,6 +43,7 @@ export const INITIAL_STATE: IState = {
         currentMatch: -1,
         matchCount: -1
     },
+    unfilteredAttributesHierarchies: [],
     attributesHierarchies: [],
     querySelectorState: [],
     visibleOnly: false,
@@ -52,6 +56,7 @@ export const INITIAL_STATE: IState = {
     showOtherAttributes: LocalStorageHelper.getShowOtherAttributes(),
     customTagFilters: LocalStorageHelper.getCustomTagFilters(),
     customTagFiltersUnsaved: LocalStorageHelper.getCustomTagFilters(),
+    customTagFiltersError: testCustomTagFilters(LocalStorageHelper.getCustomTagFilters()),
 };
 
 export type DispatchMiddleware = (action: Actions) => Promise<void>;
